@@ -1,0 +1,114 @@
+[
+    {
+        "name": "Introduction to Computer Science",
+        "description": "Learn the basics of computer science, programming, and algorithms.",
+        "instructors": [
+            {
+                "user": "6897aa8b59b532ce83f15ae3",
+                "role": "owner"
+            }
+        ],
+        "department": "Computer Science",
+        "status": "Content Creation",
+        "curriculum": [
+            {
+                "title": "Getting Started",
+                "order": 1,
+                "contents": [
+                    {
+                        "type": "session",
+                        "order": 1,
+                        "session": {
+                            "session_title": "Introduction to Programming",
+                            "duration": 45,
+                            "content": "Overview of programming concepts and languages.",
+                            "recordingUrl": "https://example.com/recordings/session1.mp4",
+                            "questions": [
+                                {
+                                    "question": {
+                                        "question": "What is a variable?",
+                                        "options": [
+                                            "A container for data",
+                                            "An operator",
+                                            "A loop",
+                                            "A function"
+                                        ],
+                                        "correctAnswerIndex": 0,
+                                        "order": 1
+                                    },
+                                    "appearTime": 120
+                                }
+                            ],
+                            "materials": [
+                                {
+                                    "title": "Slides",
+                                    "fileUrl": "https://example.com/materials/slides1.pdf"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "type": "quiz",
+                        "order": 2,
+                        "quiz": {
+                            "title": "Basics Quiz",
+                            "questions": [
+                                {
+                                    "question": "What does CPU stand for?",
+                                    "options": [
+                                        "Central Processing Unit",
+                                        "Computer Processing Unit",
+                                        "Central Programming Unit",
+                                        "Computer Programming Unit"
+                                    ],
+                                    "correctAnswerIndex": 0,
+                                    "order": 1
+                                }
+                            ],
+                            "passingScore": 60
+                        }
+                    }
+                ]
+            }
+        ],
+        "price": 150,
+        "createdAt": "2025-01-01T10:00:00Z",
+        "updatedAt": "2025-01-01T10:00:00Z"
+    },
+    {
+        "name": "Business Fundamentals",
+        "description": "Learn essential business concepts and management principles.",
+        "instructors": [
+            {
+                "user": "6897aa8b59b532ce83f15ae3",
+                "role": "owner"
+            }
+        ],
+        "department": "Business",
+        "status": "Planning",
+        "curriculum": [],
+        "price": 100,
+        "createdAt": "2025-01-04T09:00:00Z",
+        "updatedAt": "2025-01-04T09:00:00Z"
+    },
+    {
+        "name": "Advanced Mathematics",
+        "description": "Explore advanced topics in mathematics including calculus and linear algebra.",
+        "instructors": [
+            {
+                "user": "6897aa8b59b532ce83f15ae3",
+                "role": "owner"
+            },
+            {
+                "user": "6897aa8c59b532ce83f15aeb",
+                "role": "assistant"
+            }
+        ],
+        "department": "Math",
+        "status": "Review",
+        "curriculum": [],
+        "price": 200,
+        "createdAt": "2025-01-10T10:00:00Z",
+        "updatedAt": "2025-01-10T10:00:00Z"
+    }
+]

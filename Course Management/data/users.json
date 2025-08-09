@@ -1,0 +1,46 @@
+[
+  {
+    "name": "Alice Johnson",
+    "email": "alice.johnson@example.com",
+    "role": "instructor",
+    "password": "hashedpassword1",
+    "createdAt": "2025-01-01T10:00:00Z",
+    "updatedAt": "2025-01-01T10:00:00Z"
+  },
+  {
+    "name": "Bob Smith",
+    "email": "bob.smith@example.com",
+    "role": "student",
+    "password": "hashedpassword2",
+    "createdAt": "2025-01-02T11:00:00Z",
+    "updatedAt": "2025-01-02T11:00:00Z"
+  },
+  {
+    "name": "Charlie Admin",
+    "email": "charlie.admin@example.com",
+    "role": "admin",
+    "password": "hashedpassword3",
+    "favCourses": [],
+    "cartCourses": [],
+    "taughtCourses": [],
+    "createdAt": "2025-01-03T12:00:00Z",
+    "updatedAt": "2025-01-03T12:00:00Z"
+  },
+  {
+    "name": "Dana Instructor",
+    "email": "dana.instructor@example.com",
+    "role": "instructor",
+    "password": "hashedpassword4",
+    "createdAt": "2025-01-04T09:00:00Z",
+    "updatedAt": "2025-01-04T09:00:00Z"
+  },
+  {
+    "name": "Eve Student",
+    "email": "eve.student@example.com",
+    "role": "student",
+    "password": "hashedpassword5",
+    "taughtCourses": [],
+    "createdAt": "2025-01-05T14:00:00Z",
+    "updatedAt": "2025-01-05T14:00:00Z"
+  }
+]
