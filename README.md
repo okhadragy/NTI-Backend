@@ -1,6 +1,6 @@
 # Course Management API
 
-This is a simple RESTful API built using **Node.js**, **Express**, and **MongoDB** (via Mongoose) to manage courses and instructors.
+This is a simple RESTful API built using **Node.js**, **Express**, and **MongoDB** (via Mongoose) to manage courses and users.
 
 ---
 
