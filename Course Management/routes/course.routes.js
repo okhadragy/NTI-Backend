@@ -4,7 +4,8 @@ const {
     getAllCourses,
     getCourseById,
     updateCourse,
-    deleteCourse
+    deleteCourse,
+    reviewCourse
 } = require('../controllers/course.controller');
 const { protectRoutes } = require('../middleware/auth');
 const uploadTo = require('../middleware/image.upload.middleware');
@@ -42,5 +43,10 @@ router
         restrictTo("admin", "instructor"),
         deleteCourse
     );
-
+router
+    .route('/:id/rate')
+    .get(
+        protectRoutes,
+        reviewCourse
+    )
 module.exports = router;

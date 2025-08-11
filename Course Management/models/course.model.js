@@ -171,6 +171,29 @@ const courseSchema = new mongoose.Schema({
         default: "Not Started"
     },
     curriculum: [sectionSchema],
+    rating: {
+        average: {
+            type: Number,
+            min: [0, "Rating must be at least 0"],
+            max: [5, "Rating cannot exceed 5"],
+            default: 0
+        },
+        count: {
+            type: Number,
+            min: [0, "Rating count cannot be negative"],
+            default: 0
+        },
+        reviews: [{
+            user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+            score: {
+                type: Number,
+                min: [0, "Rating must be at least 0"],
+                max: [5, "Rating cannot exceed 5"],
+                required: true
+            },
+            comment: { type: String, trim: true }
+        }]
+    },
     price: {
         type: Number,
         required: [true, "Price is required"],
@@ -195,29 +218,29 @@ courseSchema.pre('findOneAndUpdate', function (next) {
 });
 
 courseSchema.post('save', async function (doc, next) {
-  try {
-    const courseId = doc._id;
-    const newInstructorIds = doc.instructors.map(i => i.user.toString()); // <-- extract user ObjectIds here
+    try {
+        const courseId = doc._id;
+        const newInstructorIds = doc.instructors.map(i => i.user.toString()); // <-- extract user ObjectIds here
 
-    await User.updateMany(
-      { _id: { $in: newInstructorIds }, role: 'instructor' },
-      { $addToSet: { taughtCourses: courseId } }
-    );
+        await User.updateMany(
+            { _id: { $in: newInstructorIds }, role: 'instructor' },
+            { $addToSet: { taughtCourses: courseId } }
+        );
 
-    const allInstructors = await User.find({ taughtCourses: courseId });
-    const outdatedInstructors = allInstructors.filter(user =>
-      !newInstructorIds.includes(user._id.toString())
-    );
+        const allInstructors = await User.find({ taughtCourses: courseId });
+        const outdatedInstructors = allInstructors.filter(user =>
+            !newInstructorIds.includes(user._id.toString())
+        );
 
-    await Promise.all(outdatedInstructors.map(user => {
-      user.taughtCourses.pull(courseId);
-      return user.save();
-    }));
+        await Promise.all(outdatedInstructors.map(user => {
+            user.taughtCourses.pull(courseId);
+            return user.save();
+        }));
 
-    next();
-  } catch (err) {
-    next(err);
-  }
+        next();
+    } catch (err) {
+        next(err);
+    }
 });
 
 courseSchema.pre('remove', async function (next) {

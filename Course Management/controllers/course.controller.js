@@ -41,13 +41,49 @@ function removeUploadedFiles(files) {
   }
 }
 
+const reviewCourse = async (req, res) => {
+    try {
+        const { score, comment } = req.body;
+
+        if (!score || score < 0 || score > 5) {
+            return res.status(400).json({ message: "Score must be between 0 and 5" });
+        }
+
+        const course = await Course.findById(req.params.id);
+        if (!course) return res.status(404).json({ message: "Course not found" });
+        const existingReview = course.rating.reviews.find(
+            r => r.user.toString() === req.userId
+        );
+
+        if (existingReview) {
+            existingReview.score = score;
+            if (comment !== undefined) existingReview.comment = comment;
+        } else {
+            course.rating.reviews.push({
+                user: req.userId,
+                score,
+                comment
+            });
+        }
+
+        const total = course.rating.reviews.reduce((sum, r) => sum + r.score, 0);
+        course.rating.count = course.rating.reviews.length;
+        course.rating.average = total / course.rating.count;
+
+        await course.save();
+
+        res.json({ message: "Rating submitted", rating: course.rating });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
 const createCourse = async (req, res) => {
   try {
     let instructors = req.body.instructors || [];
     const requesterId = req.userId;
     const requesterRole = req.userRole;
 
-    // Add requester as owner if they are instructor and not already included
     if (requesterRole === 'instructor' && !instructors.some(i => i.user == requesterId)) {
       instructors.push({ user: requesterId, role: 'owner' });
     }
@@ -277,4 +313,5 @@ module.exports = {
     getCourseById,
     updateCourse,
     deleteCourse,
+    reviewCourse,
 };
