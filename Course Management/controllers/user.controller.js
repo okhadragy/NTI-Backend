@@ -5,31 +5,32 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 
+const deleteUploadedFile = (filename) => {
+  if (filename) {
+    const filePath = path.join(__dirname, "../uploads/profiles", filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+};
 
 const signup = async (req, res) => {
   const uploadedPhoto = req.file?.filename || "profile.png";
 
   try {
     let { name, password, confirmPassword, email, role } = req.body;
+    role = role || "student";
 
-    if (!role) role = 'student';
+    const allowedRolesForSignup = ["student", "instructor"];
 
-    const allowedRolesForSignup = ['student', 'instructor'];
-
-    if (role === 'admin') {
-      if (!req.userRole || req.userRole !== 'admin') {
-        if (req.file) {
-          fs.unlinkSync(path.join(__dirname, "../uploads/profiles", uploadedPhoto));
-        }
-        return res.status(403).json({
-          status: "fail",
-          message: "You do not have permission to create admin users",
-        });
-      }
-    } else if (!allowedRolesForSignup.includes(role)) {
-      if (req.file) {
-        fs.unlinkSync(path.join(__dirname, "../uploads/profiles", uploadedPhoto));
-      }
+    if (role === "admin" && (!req.userRole || req.userRole !== "admin")) {
+      deleteUploadedFile(req.file?.filename);
+      return res.status(403).json({
+        status: "fail",
+        message: "You do not have permission to create admin users",
+      });
+    } else if (!allowedRolesForSignup.includes(role) && role !== "admin") {
+      deleteUploadedFile(req.file?.filename);
       return res.status(400).json({
         status: "fail",
         message: `Role must be one of: ${allowedRolesForSignup.join(", ")}`,
@@ -37,33 +38,34 @@ const signup = async (req, res) => {
     }
 
     if (password !== confirmPassword) {
-      if (req.file) {
-        fs.unlinkSync(path.join(__dirname, "../uploads/profiles", uploadedPhoto));
-      }
-
+      deleteUploadedFile(req.file?.filename);
       return res.status(400).json({ status: "fail", message: "Passwords do not match" });
     }
 
-    const existingUser = await User.findOne({ email: email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      if (req.file) {
-        fs.unlinkSync(path.join(__dirname, "../uploads/profiles", uploadedPhoto));
-      }
+      deleteUploadedFile(req.file?.filename);
       return res.status(400).json({ status: "fail", message: `User already exists` });
     }
 
-    const user = await User.create({ name, password, email, photo: uploadedPhoto, role });
-
-    const token = JWT.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
+    const user = await User.create({
+      name,
+      email,
+      password,
+      photo: uploadedPhoto,
+      role
     });
+
+    const token = JWT.sign(
+      { id: user._id, name: user.name, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
 
     res.status(201).json({ status: "success", token, data: { user } });
   } catch (error) {
-    if (req.file) {
-      fs.unlinkSync(path.join(__dirname, "../uploads/profiles", uploadedPhoto));
-    }
-    res.status(400).json({ status: "fail", message: `Error in sign up ${error.message}` });
+    deleteUploadedFile(req.file?.filename);
+    res.status(400).json({ status: "fail", message: `Error in sign up: ${error.message}` });
   }
 };
 
@@ -127,7 +129,6 @@ const changePassword = async (req, res) => {
       return res.status(401).json({ status: "fail", message: "Current password is incorrect" });
     }
 
-    user.password = await bcrypt.hash(newPassword, 12);
     await user.save();
 
     res.status(200).json({ status: "success", message: "Password changed successfully" });
