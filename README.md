@@ -92,7 +92,7 @@ JWT_EXPIRES_IN=token_expiration_duration
 
 ```bash
 npm run insert -- user ./users.json
-npm run insert -- course ./course.json
+npm run insert -- course ./courses.json
 ```
 
 ### 5. Run the Project

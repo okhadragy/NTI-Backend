@@ -22,10 +22,6 @@ const discountSchema = new mongoose.Schema({
     endDate: { type: Date },
     usageLimit: { type: Number }, // null = unlimited
     usedCount: { type: Number, default: 0 },
-    courses: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course"
-    }], // empty array means applicable to all courses
     active: { type: Boolean, default: true }
 }, { timestamps: true });
 

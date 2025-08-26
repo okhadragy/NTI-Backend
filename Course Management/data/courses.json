@@ -4,7 +4,7 @@
         "description": "Learn the basics of computer science, programming, and algorithms.",
         "instructors": [
             {
-                "user": "6897aa8b59b532ce83f15ae3",
+                "user": "68a5b8e6a8d40bc0dffd23f4",
                 "role": "owner"
             }
         ],
@@ -80,7 +80,7 @@
         "description": "Learn essential business concepts and management principles.",
         "instructors": [
             {
-                "user": "6897aa8b59b532ce83f15ae3",
+                "user": "68a5b8e6a8d40bc0dffd23f4",
                 "role": "owner"
             }
         ],
@@ -96,11 +96,11 @@
         "description": "Explore advanced topics in mathematics including calculus and linear algebra.",
         "instructors": [
             {
-                "user": "6897aa8b59b532ce83f15ae3",
+                "user": "68a5b8e6a8d40bc0dffd23f4",
                 "role": "owner"
             },
             {
-                "user": "6897aa8c59b532ce83f15aeb",
+                "user": "68a5b8e7a8d40bc0dffd23f6",
                 "role": "assistant"
             }
         ],

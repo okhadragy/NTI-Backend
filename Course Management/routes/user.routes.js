@@ -22,7 +22,7 @@ router
     userControllers.login
   );
 router
-  .route('/changePassword')
+  .route('/change-password')
   .post(
     protectRoutes,
     userControllers.changePassword
@@ -35,6 +35,8 @@ router
   )
   .patch(
     protectRoutes,
+    uploadTo('profiles').single('photo'),
+    multerErrorHandler,
     userControllers.updateUser
   )
   .delete(
@@ -42,26 +44,22 @@ router
     userControllers.deleteUser
   );
 router
-  .route('/addToFav')
+  .route('/fav')
   .post(
     protectRoutes,
     userControllers.addCourseToFav
-  );
-router
-  .route('/removeFromFav')
-  .post(
+  )
+  .delete(
     protectRoutes,
     userControllers.removeCourseFromFav
   );
 router
-  .route('/addToCart')
+  .route('/cart')
   .post(
     protectRoutes,
     userControllers.addCourseToCart
-  );
-router
-  .route('/removeFromCart')
-  .post(
+  )
+  .delete(
     protectRoutes,
     userControllers.removeCourseFromCart
   );
@@ -72,4 +70,9 @@ router
     restrictTo("instructor"),
     getMyCourses,
   )
+router
+  .route('/instructors')
+  .get(
+    userControllers.getAllInstructors
+  );
 module.exports = router;

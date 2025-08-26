@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
+const Enrollment = require('../models/enrollment.model');
 
 const deleteUploadedFile = (filename) => {
   if (filename) {
@@ -18,7 +19,7 @@ const signup = async (req, res) => {
   const uploadedPhoto = req.file?.filename || "profile.png";
 
   try {
-    let { name, password, confirmPassword, email, role } = req.body;
+    let { name, password, confirmPassword, email, role, jobTitle } = req.body;
     role = role || "student";
 
     const allowedRolesForSignup = ["student", "instructor"];
@@ -48,13 +49,19 @@ const signup = async (req, res) => {
       return res.status(400).json({ status: "fail", message: `User already exists` });
     }
 
-    const user = await User.create({
+    const userData = {
       name,
       email,
       password,
       photo: uploadedPhoto,
       role
-    });
+    };
+
+    if (role === "instructor" && jobTitle) {
+      userData.jobTitle = jobTitle;
+    }
+
+    const user = await User.create(userData);
 
     const token = JWT.sign(
       { id: user._id, name: user.name, role: user.role },
@@ -62,12 +69,13 @@ const signup = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
-    res.status(201).json({ status: "success", token, data: { user } });
+    res.status(201).json({ status: "success", token, user: { name: user.name, email: user.email, role: user.role, photo: user.photo, jobTitle: user.jobTitle } });
   } catch (error) {
     deleteUploadedFile(req.file?.filename);
     res.status(400).json({ status: "fail", message: `Error in sign up: ${error.message}` });
   }
 };
+
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -95,7 +103,7 @@ const login = async (req, res) => {
   }
 
   const token = JWT.sign(
-    { id: existingUser._id, name: existingUser.name },
+    { id: existingUser._id, name: existingUser.name, role: existingUser.role },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN }
   );
@@ -103,7 +111,7 @@ const login = async (req, res) => {
   return res.status(200).json({
     status: "success",
     token,
-    data: { user: { name: existingUser.name, email: existingUser.email } },
+    user: { name: existingUser.name, role: existingUser.role, email: existingUser.email, photo: existingUser.photo, jobTitle: existingUser.jobTitle },
   });
 };
 
@@ -111,15 +119,22 @@ const changePassword = async (req, res) => {
   try {
     const userId = req.userId;
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
     if (!currentPassword || !newPassword || !confirmNewPassword) {
-      return res.status(400).json({ status: "fail", message: "Please provide current, new, and confirm passwords" });
+      return res.status(400).json({
+        status: "fail",
+        message: "Please provide current, new, and confirm passwords",
+      });
     }
 
-    if (newPassword !== confirmNewPassword) {
-      return res.status(400).json({ status: "fail", message: "New passwords do not match" });
+    if (newPassword != confirmNewPassword) {
+      return res.status(400).json({
+        status: "fail",
+        message: "New passwords do not match",
+      });
     }
 
-    const user = await User.findById(userId).select('+password');
+    const user = await User.findById(userId).select("+password");
     if (!user) {
       return res.status(404).json({ status: "fail", message: "User not found" });
     }
@@ -129,15 +144,19 @@ const changePassword = async (req, res) => {
       return res.status(401).json({ status: "fail", message: "Current password is incorrect" });
     }
 
+    user.password = newPassword;
     await user.save();
 
-    res.status(200).json({ status: "success", message: "Password changed successfully" });
-
+    res.status(200).json({
+      status: "success",
+      message: "Password changed successfully",
+    });
   } catch (error) {
     console.error("Error changing password:", error);
     res.status(500).json({ status: "error", message: "Internal server error" });
   }
 };
+
 
 const getAllUsers = async (req, res) => {
   try {
@@ -165,6 +184,30 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const getAllInstructors = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 3;
+    const skip = (page - 1) * limit;
+
+    const instructors = await User.find(
+      { role: "instructor" },
+      { name: 1, photo: 1, jobTitle: 1 }
+    )
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      status: "success",
+      length: instructors.length,
+      data: { instructors },
+    });
+  } catch (error) {
+    res.status(400).json({ status: "fail", message: error.message });
+  }
+};
+
 const getUserProfile = async (req, res) => {
   try {
     const requesterId = req.userId;
@@ -177,15 +220,86 @@ const getUserProfile = async (req, res) => {
     }
 
     const user = await User.findById(userId, { password: 0, __v: 0, _id: 0 })
-      .populate('favCourses', 'name thumbnail price')
-      .populate('cartCourses', 'name thumbnail price')
-      .populate('taughtCourses', 'name thumbnail price');
+      .populate({ path: 'favCourses', select: '-__v', populate: { path: 'instructors.user', select: '-__v' } })
+      .populate({ path: 'cartCourses', select: '-__v', populate: { path: 'instructors.user', select: '-__v' } })
+      .populate({ path: 'taughtCourses', select: '-__v', populate: { path: 'instructors.user', select: '-__v' } });
 
     if (!user) {
       return res.status(404).json({ status: "fail", message: "User not found" });
     }
 
-    res.status(200).json({ status: "success", data: { user } });
+    const favCoursesWithAppliedDiscount = user.favCourses.map(course => {
+      const basePrice = course.price;
+      let finalPrice = basePrice;
+
+      if (course.pageDiscounts && course.pageDiscounts.length > 0) {
+        for (const discount of course.pageDiscounts) {
+          if (discount.type === 'percentage') {
+            finalPrice -= (finalPrice * discount.value) / 100;
+          } else if (discount.type === 'fixed') {
+            finalPrice -= discount.value;
+          }
+        }
+        finalPrice = Math.max(finalPrice, 0);
+      }
+
+      return {
+        ...course.toObject(),
+        basePrice,
+        finalPrice
+      };
+    });
+
+    const cartCoursesWithAppliedDiscount = user.cartCourses.map(course => {
+      const basePrice = course.price;
+      let finalPrice = basePrice;
+
+      if (course.pageDiscounts && course.pageDiscounts.length > 0) {
+        for (const discount of course.pageDiscounts) {
+          if (discount.type === 'percentage') {
+            finalPrice -= (finalPrice * discount.value) / 100;
+          } else if (discount.type === 'fixed') {
+            finalPrice -= discount.value;
+          }
+        }
+        finalPrice = Math.max(finalPrice, 0);
+      }
+
+      return {
+        ...course.toObject(),
+        basePrice,
+        finalPrice
+      };
+    });
+
+    const taughtCoursesWithAppliedDiscount = user.taughtCourses.map(course => {
+      const basePrice = course.price;
+      let finalPrice = basePrice;
+
+      if (course.pageDiscounts && course.pageDiscounts.length > 0) {
+        for (const discount of course.pageDiscounts) {
+          if (discount.type === 'percentage') {
+            finalPrice -= (finalPrice * discount.value) / 100;
+          } else if (discount.type === 'fixed') {
+            finalPrice -= discount.value;
+          }
+        }
+        finalPrice = Math.max(finalPrice, 0);
+      }
+
+      return {
+        ...course.toObject(),
+        basePrice,
+        finalPrice
+      };
+    });
+
+    const userObj = user.toObject();
+    userObj.favCourses = favCoursesWithAppliedDiscount;
+    userObj.cartCourses = cartCoursesWithAppliedDiscount;
+    userObj.taughtCourses = taughtCoursesWithAppliedDiscount;
+
+    res.status(200).json({ status: "success", data: { user: userObj } });
   } catch (error) {
     res.status(500).json({ status: "fail", message: error.message });
   }
@@ -196,20 +310,28 @@ const updateUser = async (req, res) => {
     const requesterId = req.userId;
     const requesterRole = req.userRole;
 
-    const userId = requesterRole === 'admin' ? req.params.id : requesterId;
+    const userId = requesterRole === "admin" ? req.params.id : requesterId;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ status: "fail", message: "Invalid User ID" });
     }
 
-    if (requesterRole !== 'admin' && 'role' in req.body) {
+    if (!req.body || typeof req.body !== "object") {
+      return res.status(400).json({ status: "fail", message: "Request body is missing or invalid" });
+    }
+
+    if (requesterRole !== "admin" && Object.prototype.hasOwnProperty.call(req.body, "role")) {
       delete req.body.role;
+    }
+
+    if (req.file) {
+      req.body.photo = req.file.filename;
     }
 
     const updatedUser = await User.findByIdAndUpdate(userId, req.body, {
       new: true,
       runValidators: true,
-      select: '-password -__v -_id'
+      select: "-password -__v"
     });
 
     if (!updatedUser) {
@@ -222,6 +344,8 @@ const updateUser = async (req, res) => {
     res.status(500).json({ status: "error", message: "Internal server error" });
   }
 };
+
+
 
 const deleteUser = async (req, res) => {
   try {
@@ -339,6 +463,14 @@ const addCourseToCart = async (req, res) => {
       });
     }
 
+    const enrolled = await Enrollment.exists({ user: userId, course: courseId });
+    if (enrolled) {
+      return res.status(400).json({
+        status: "fail",
+        message: "You are already enrolled in this course",
+      });
+    }
+
     if (!user.cartCourses.includes(courseId)) {
       user.cartCourses.push(courseId);
       await user.save();
@@ -349,9 +481,10 @@ const addCourseToCart = async (req, res) => {
       data: { cartCourses: user.cartCourses },
     });
   } catch (error) {
+    console.error("Error adding course to cart:", error);
     res.status(500).json({
       status: "fail",
-      message: error.message,
+      message: "Internal server error",
     });
   }
 };
@@ -396,6 +529,7 @@ module.exports = {
   login,
   changePassword,
   getAllUsers,
+  getAllInstructors,
   getUserProfile,
   updateUser,
   deleteUser,

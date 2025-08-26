@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const User = require('./user.model');
+const Discount = require('./discount.model');
 const imageFileValidator = require("../utils/imageFileValidator");
 
 const assessmentSchema = new mongoose.Schema({
@@ -107,7 +108,7 @@ const sectionSchema = new mongoose.Schema({
     order: { type: Number, required: [true, "Section order is required"] }
 });
 
-const instructorSchema = new mongoose.Schema({
+const courseInstructorSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -143,7 +144,7 @@ const courseSchema = new mongoose.Schema({
         minlength: [10, "Description should be at least 10 characters"]
     },
     instructors: {
-        type: [instructorSchema],
+        type: [courseInstructorSchema],
         required: [true, "At least one instructor is required"],
         validate: {
             validator: async function (instructors) {
@@ -199,7 +200,9 @@ const courseSchema = new mongoose.Schema({
         required: [true, "Price is required"],
         min: [0, "Price must be a positive number"],
         default: 0
-    }
+    },
+    discounts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Discount' }],
+    pageDiscounts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Discount' }]
 }, {
     timestamps: true
 });

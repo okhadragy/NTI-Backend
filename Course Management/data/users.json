@@ -1,13 +1,5 @@
 [
   {
-    "name": "Alice Johnson",
-    "email": "alice.johnson@example.com",
-    "role": "instructor",
-    "password": "hashedpassword1",
-    "createdAt": "2025-01-01T10:00:00Z",
-    "updatedAt": "2025-01-01T10:00:00Z"
-  },
-  {
     "name": "Bob Smith",
     "email": "bob.smith@example.com",
     "role": "student",
@@ -27,10 +19,22 @@
     "updatedAt": "2025-01-03T12:00:00Z"
   },
   {
+    "name": "Alice Johnson",
+    "email": "alice.johnson@example.com",
+    "role": "instructor",
+    "password": "hashedpassword1",
+    "photo": "img_general_image.png",
+    "jobTitle": "Senior Web Development Instructor",
+    "createdAt": "2025-01-01T10:00:00Z",
+    "updatedAt": "2025-01-01T10:00:00Z"
+  },
+  {
     "name": "Dana Instructor",
     "email": "dana.instructor@example.com",
     "role": "instructor",
     "password": "hashedpassword4",
+    "photo": "img_general_image_2.png",
+    "jobTitle": "Data Science Instructor",
     "createdAt": "2025-01-04T09:00:00Z",
     "updatedAt": "2025-01-04T09:00:00Z"
   },
@@ -42,5 +46,15 @@
     "taughtCourses": [],
     "createdAt": "2025-01-05T14:00:00Z",
     "updatedAt": "2025-01-05T14:00:00Z"
+  },
+  {
+    "name": "Frank Lee",
+    "email": "frank.lee@example.com",
+    "role": "instructor",
+    "password": "hashedpassword6",
+    "photo": "img_general_image_1.png",
+    "jobTitle": "AI & Machine Learning Instructor",
+    "createdAt": "2025-01-06T15:00:00Z",
+    "updatedAt": "2025-01-06T15:00:00Z"
   }
 ]

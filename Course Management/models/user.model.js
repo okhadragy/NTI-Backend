@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "User Name is Required"],
     unique: true,
+    lowercase: true,
     trim: true,
   },
   email: {
@@ -21,6 +22,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['student', 'instructor', 'admin'],
     default: 'student'
+  },
+  jobTitle: {
+    type: String,
   },
   photo: {
     type: String,
